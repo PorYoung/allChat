@@ -1,9 +1,9 @@
 const Service = require('egg').Service;
 class RoomService extends Service {
   async getRoomInfo(options) {
-    if (options.room == this.config.appConfig.defaultChatRoom) {
+    if (options._id == this.config.appConfig.defaultChatRoom) {
       return this.ctx.model.Room.findOneAndUpdate({
-        room: this.config.appConfig.defaultChatRoom
+        _id: this.config.appConfig.defaultChatRoom
       }, {
         $set: {
           max: this.config.appConfig.defaultChatRoomMax
@@ -14,7 +14,7 @@ class RoomService extends Service {
       });
     } else {
       return this.ctx.model.Room.findOne({
-        room: options.room,
+        _id: options._id,
       });
     }
   }

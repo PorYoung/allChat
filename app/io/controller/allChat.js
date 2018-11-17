@@ -14,10 +14,17 @@ module.exports = app => {
       let message = ctx.args[0] || {};
 
       //save to database
-      await service.message.saveMessage(Object.assign({
-        toType: 'room',
+      await service.message.saveMessage(Object.assign({ 
         date: new Date().getTime(),
       }, message));
+      console.log("message:",message);
+
+      let userinfo = await service.user.findOneByUserid(ctx.session.userid);
+      message.from = {
+        userid: userinfo.userid,
+        username: userinfo.username,
+        avatar: userinfo.avatar,
+      };
 
       let room = Object.keys(socket.rooms)[0];
       message = helper.parseMsg('room_message', message);

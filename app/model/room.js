@@ -3,9 +3,13 @@ module.exports = app => {
   const Schema = mongoose.Schema;
 
   const RoomSchema = new Schema({
-    room: String,
+    _id: {
+      type: String,
+      unique: true,
+      index: true,
+      alias: 'roomid',
+    },
     max: Number
   });
-
   return mongoose.model('Room', RoomSchema);
 }

@@ -3,13 +3,22 @@ module.exports = app => {
   const Schema = mongoose.Schema;
 
   const MessageSchema = new Schema({
-    from: String,
-    to: String,
+    from: {
+      type: String,
+      ref: 'User',
+    },
+    to: {
+      type: String,
+      ref: 'User',
+    },
     toType: String,
+    room: {
+      type: String,
+      ref: 'Room',
+    },
     type: String,
     content: String,
     date: String,
-    avatar: String,
   });
 
   return mongoose.model('Message', MessageSchema);

@@ -11,26 +11,26 @@ import {
 
 // $(function ($) {
 var checkForm = {
-  username: false,
+  userid: false,
   password: false,
   confirmPassword: false
 }
 //submit按钮状态
 var checkSubmit = function () {
-  if (checkForm.username && checkForm.password && checkForm.confirmPassword) {
+  if (checkForm.userid && checkForm.password && checkForm.confirmPassword) {
     $("#submit").removeAttr("disabled");
   } else {
     $("#submit").attr("disabled", "disabled");
   }
 }
-//用户名验证 警惕ajax的异步性
-$("#username").focus(function () {
+//用户ID验证 警惕ajax的异步性
+$("#userid").focus(function () {
   $(".check-icon:eq(0)").removeClass("fa fa-spinner fa-spin fa-check fa-times").html("(字母、数字或_ 3-16位)").css("color", "#FFF");
 }).blur(function () {
-  if (!checkForm.username) {
+  if (!checkForm.userid) {
     //兼容问题
-    //$("#username").focus();
-    $(".check-icon:eq(0)").removeClass("fa fa-spinner fa-spin fa-check fa-times").html("请输入正确用户名").css("color", "#FFF").animate({
+    //$("#userid").focus();
+    $(".check-icon:eq(0)").removeClass("fa fa-spinner fa-spin fa-check fa-times").html("请输入正确用户ID").css("color", "#FFF").animate({
       fontSize: "1.2em"
     }, function () {
       $(this).animate({
@@ -47,30 +47,30 @@ $("#username").focus(function () {
       top: "initial",
       color: "#fff"
     }).html("");
-    $.get("/register/checkUsername?username=" + $("#username").val(), function (res) {
+    $.get("/register/checkUserid?userid=" + $("#userid").val(), function (res) {
       if (res.toString() === "1") {
-        //用户名可以使用
+        //用户ID可以使用
         $(".check-icon:eq(0)").removeClass("fa fa-spinner fa-spin fa-times").addClass("fa fa-check").css({
           top: "initial",
           color: "#00EE00"
-        }).html("").attr("title", "用户名可以使用");
-        checkForm.username = true;
+        }).html("").attr("title", "用户ID可以使用");
+        checkForm.userid = true;
         checkSubmit();
       } else {
-        //用户名已存在
+        //用户ID已存在
         $(".check-icon:eq(0)").removeClass("fa fa-spinner fa-spin fa-check").addClass("fa fa-times").css({
           top: "initial",
           color: "#CC0000"
-        }).html("").attr("title", "用户名已存在");
-        checkForm.username = false;
+        }).html("").attr("title", "用户ID已存在");
+        checkForm.userid = false;
         checkSubmit();
       }
       //                    checkSubmit();
     });
   } else {
-    //用户名输入错误
+    //用户ID输入错误
     $(".check-icon:eq(0)").removeClass("fa fa-spinner fa-spin fa-check fa-times").html("您的格式不对哦").css("color", "#FFF").removeAttr("title");
-    checkForm.username = false;
+    checkForm.userid = false;
   }
   checkSubmit();
 });
@@ -80,7 +80,7 @@ $("#username").focus(function () {
 var comparePassword = function () {
   if ($("#confirm-password").val() === $("#password").val() && checkForm.password) {
     //密码一致
-    $(".check-icon:eq(2)").removeClass("fa fa-times").addClass("fa fa-check").css({
+    $(".check-icon:eq(3)").removeClass("fa fa-times").addClass("fa fa-check").css({
       top: "initial",
       color: checkForm.passwordColor
     }).attr("title", "OK").html("");
@@ -88,7 +88,7 @@ var comparePassword = function () {
     checkSubmit();
   } else {
     //密码不一致
-    $(".check-icon:eq(2)").removeClass("fa fa-check").addClass("fa fa-times").css({
+    $(".check-icon:eq(3)").removeClass("fa fa-check").addClass("fa fa-times").css({
       top: "initial",
       color: "#CC0000"
     }).attr("title", "unmatched").html("");
@@ -97,12 +97,12 @@ var comparePassword = function () {
   }
 }
 $("#password").focus(function () {
-  $(".check-icon:eq(1)").removeClass("fa fa-times fa-check").html("(letter|number|punctuation 6-20)").css("color", "#FFF");
+  $(".check-icon:eq(2)").removeClass("fa fa-times fa-check").html("(letter|number|punctuation 6-20)").css("color", "#FFF");
 }).blur(function () {
   if (!checkForm.password) {
     //                兼容问题
     //                this.focus();
-    $(".check-icon:eq(1)").removeClass("fa fa-times fa-check").html("请验证密码格式").css("color", "#FFF").animate({
+    $(".check-icon:eq(2)").removeClass("fa fa-times fa-check").html("请验证密码格式").css("color", "#FFF").animate({
       fontSize: "1.2em"
     }, function () {
       $(this).animate({
@@ -117,7 +117,7 @@ $("#password").focus(function () {
     regL = new RegExp(/^(?:\d+|[a-zA-Z]+|[!@#$%^&*:,.?;]+){6,20}$/);
   if (regH.test($(this).val())) {
     //密码高强度 字母+数字+特殊字符
-    $(".check-icon:eq(1)").removeClass("fa fa-times").addClass("fa fa-check").css({
+    $(".check-icon:eq(2)").removeClass("fa fa-times").addClass("fa fa-check").css({
       top: "initial",
       color: "#00EE00"
     }).attr("title", "密码强度高").html("");
@@ -125,7 +125,7 @@ $("#password").focus(function () {
     checkForm.passwordColor = "#00EE00";
   } else if (regM.test($(this).val())) {
     //密码高强中 字母+数字+特殊字符
-    $(".check-icon:eq(1)").removeClass("fa fa-times").addClass("fa fa-check").css({
+    $(".check-icon:eq(2)").removeClass("fa fa-times").addClass("fa fa-check").css({
       top: "initial",
       color: "#FF8000"
     }).attr("title", "密码强度中").html("");
@@ -133,14 +133,14 @@ $("#password").focus(function () {
     checkForm.passwordColor = "#FF8000";
   } else if (regL.test($(this).val())) {
     //密码高强弱 字母+数字+特殊字符
-    $(".check-icon:eq(1)").removeClass("fa fa-times").addClass("fa fa-check").css({
+    $(".check-icon:eq(2)").removeClass("fa fa-times").addClass("fa fa-check").css({
       top: "initial",
       color: "#B0171F"
     }).attr("title", "密码强度弱").html("");
     checkForm.password = true;
     checkForm.passwordColor = "#B0171F";
   } else {
-    $(".check-icon:eq(1)").removeClass("fa fa-check").addClass("fa fa-times").css({
+    $(".check-icon:eq(2)").removeClass("fa fa-check").addClass("fa fa-times").css({
       top: "initial",
       color: "#CC0000"
     }).attr("title", "密码格式不正确").html("");
@@ -152,12 +152,12 @@ $("#password").focus(function () {
 })
 //确认密码框验证
 $("#confirm-password").focus(function () {
-  $(".check-icon:eq(2)").html("");
+  $(".check-icon:eq(3)").html("");
 }).blur(function () {
   if (!checkForm.confirmPassword && checkForm.password) {
     //                兼容问题
     //                $(this).focus();
-    $(".check-icon:eq(2)").removeClass("fa fa-times fa-check").html("两次密码不一致").css("color", "#FFF").animate({
+    $(".check-icon:eq(3)").removeClass("fa fa-times fa-check").html("两次密码不一致").css("color", "#FFF").animate({
       fontSize: "1.2em"
     }, function () {
       $(this).animate({
@@ -171,12 +171,13 @@ $("#confirm-password").focus(function () {
 });
 //提交表单
 $("#submit").click(function () {
-  if (checkForm.username && checkForm.password && checkForm.confirmPassword) {
+  if (checkForm.userid && checkForm.password && checkForm.confirmPassword) {
     //表单验证完成
     var clearMyLoading = myLoading("Waiting...");
     $.post("/register", {
+      userid: $("#userid").val(),
+      password: $("#password").val(),
       username: $("#username").val(),
-      password: $("#password").val()
     }, function (res) {
       if (res === "1") {
         //注册成功

@@ -33,12 +33,12 @@ module.exports = () => {
     };
     // 检查房间是否存在，不存在则踢出用户
     const hasRoom = await service.room.getRoomInfo({
-      room: room
+      _id: room
     });
-    const countInRoom = await service.connection.countConnectedInRoom(room);
-    console.warn('count:', countInRoom);
+    const onlineCount = await service.user.countConnectedInRoom(room);
+    console.warn('count:', onlineCount);
     logger.info('#has_room_exist', hasRoom);
-    logger.info('#people_in_room', countInRoom);
+    logger.info('#people_in_room', onlineCount);
     if (!hasRoom) {
       tick(sid, {
         type: 'room_not_exist',
@@ -47,7 +47,7 @@ module.exports = () => {
       return;
     }
     // 检查房间是否已满，已满则踢出用户
-    else if (countInRoom >= hasRoom.max) {
+    else if (onlineCount >= hasRoom.max) {
       tick(sid, {
         type: 'room_is_full',
         message: 'error, room{' + room + '} is full.'
@@ -58,27 +58,40 @@ module.exports = () => {
     // 用户加入房间
     logger.info('#join', room);
     socket.join(room);
-    await ctx.service.connection.updateConnectionInfo({
-      username: ctx.session.username,
+    await service.user.updateConnectionInfo({
+      userid: ctx.session.userid,
       socketid: sid,
       room: room,
+      connected: true,
     });
 
     //通知该room中的在线用户
     nsp.to(room).emit('info', helper.parseMsg('info', {
       type: 'welcome',
-      content: `用户${ctx.session.username}加入了聊天室.`,
+      content: `用户 ${ctx.session.username} [ID:${ctx.session.userid}]加入了聊天室.`,
     }));
     // 在线列表
-    nsp.adapter.clients(rooms, (err, clients) => {
-      logger.info('#online_join', clients);
-
-      // 更新在线用户列表
+    nsp.adapter.clients(rooms, async (err, clients) => {
       nsp.to(room).emit('online', {
-        clients,
         action: 'join',
-        target: 'participator',
-        message: `User(${ctx.session.username}) joined.`,
+        target: 'onlineUsers',
+        message: `User(${ctx.session.userid}) joined.`,
+        userinfo: {
+          userid: ctx.session.userid,
+          username: ctx.session.username,
+          socketid: sid,
+          room: room,
+        },
+      });
+      logger.info('#online_join', clients);
+      //给新用户发送在线列表
+      const onlineUsers = await service.user.getConnectionInfoBySocketid(clients);
+      socket.emit('online', {
+        action: 'update',
+        target: 'self',
+        onlineUsers: onlineUsers,
+        onlineCount: onlineCount+1,
+        max: hasRoom.max,
       });
     });
 
@@ -104,9 +117,15 @@ module.exports = () => {
         clients,
         action: 'leave',
         target: 'participator',
-        message: `User(${ctx.session.username}) leaved.`,
+        message: `User(${ctx.session.userid}) leaved.`,
       });
     });
-    console.log('disconnection!');
+    await service.user.updateConnectionInfo({
+      userid: ctx.session.userid,
+      socketid: null,
+      room: room,
+      connected: false,
+    });
+    console.log(`User(${ctx.session.userid}) disconnection!`);
   };
 };

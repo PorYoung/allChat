@@ -9,12 +9,12 @@ class allChatController extends Controller {
       ctx,
       service
     } = this;
-    if (ctx.session.username == null) {
+    if (ctx.session.userid == null) {
       return ctx.body = '403 forbidden';
     }
-    let userinfo = await service.user.findOneByUsername(ctx.session.username);
+    let userinfo = await service.user.findOneByUserid(ctx.session.userid);
     if (userinfo) {
-      return ctx.body = userinfo._doc;
+      return ctx.body = userinfo;
     } else {
       return ctx.body = '-1';
     }
@@ -29,7 +29,7 @@ class allChatController extends Controller {
       page
     } = ctx.request.query;
     const messageData = await service.message.findByPagination({}, config.appConfig.messageSplitLimit, page);
-    console.log(messageData);
+    console.log("messageData:",messageData);
     if (messageData && messageData.length > 0) {
       return ctx.body = messageData;
     } else {
@@ -61,9 +61,9 @@ class allChatController extends Controller {
       config
     } = this;
     const {
-      username
+      userid
     } = ctx.request.query;
-    let filename = ''.concat(username, '_', new Date().getTime(), '.jpg');
+    let filename = ''.concat(userid, '_', new Date().getTime(), '.jpg');
     const result = await this.formParse(ctx.req, filename, config);
     return ctx.body = result;
   }

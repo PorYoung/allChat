@@ -10,13 +10,19 @@ class MessageService extends Service {
       return null;
     }
     const start = limit * page;
-    return this.ctx.model.Message
+    const queryArr = await this.ctx.model.Message
       .where(criterion)
       .sort({
         date: -1
       })
       .limit(limit)
       .skip(start)
+      .populate('from','userid username avatar');
+    let resArr = [];
+    queryArr.forEach((doc)=>{
+      resArr.push(doc.toObject({virtuals: true}));
+    });
+    return resArr;
   }
 }
 module.exports = MessageService

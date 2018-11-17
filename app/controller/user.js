@@ -5,10 +5,11 @@ const Controller = require('egg').Controller;
 class UserController extends Controller {
   async login() {
     const {ctx, service} = this;
-    let {username, password, rememberMe} = ctx.request.body;
-    let userinfo = await service.user.findOneByUsername(username);
+    let {userid, password, rememberMe} = ctx.request.body;
+    let userinfo = await service.user.findOneByUserid(userid);
     if (userinfo && userinfo.password == password) {
-      ctx.session.username = username;
+      ctx.session.userid = userid;
+      ctx.session.username = userinfo.username;
       if (rememberMe) ctx.session.maxAge = ms('30d');
       return ctx.body = '1';
     }
@@ -21,27 +22,32 @@ class UserController extends Controller {
       service
     } = this;
     let {
+      userid,
       username,
       password
     } = ctx.request.body;
-    let userinfo = await service.user.findOneByUsername(username);
+    let userinfo = await service.user.findOneByUserid(userid);
     if (userinfo) {
       return ctx.body = '-1'
     }
-    await service.user.createUser(username, password);
+    if(username==null){
+      username = userid;
+    }
+    await service.user.createUser(userid, username, password);
+    ctx.session.userid = userid;
     ctx.session.username = username;
     return ctx.body = '1';
   }
 
-  async checkUsername() {
+  async checkUserid() {
     const {
       ctx,
       service
     } = this
     let {
-      username
+      userid
     } = ctx.request.query;
-    let userinfo = await service.user.findOneByUsername(username);
+    let userinfo = await service.user.findOneByUserid(userid);
     if (userinfo) {
       return ctx.body = '-1';
     }

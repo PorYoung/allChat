@@ -35,7 +35,7 @@
 <body>
     <div class="body" oncontextmenu="return false;" style="height:100vh">
         <header id="header">
-            <img src="<%= avatar %>" alt="<%= username%>" title="<%= username%>">
+            <img src="<%= avatar %>" alt="<%= userid%>" title="<%= userid%>">
             <span>allChat</span>
         </header>
 
@@ -70,7 +70,7 @@
     </div>
     <div class="infoMenuWrap">
         <div id="accordion">
-            <div class="card">
+            <!-- <div class="card">
                 <div class="card-header" id="headingOne">
                     <h5 class="mb-0">
                         <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true"
@@ -91,7 +91,7 @@
                         heard of them accusamus labore sustainable VHS.
                     </div>
                 </div>
-            </div>
+            </div> -->
         </div>
     </div>
     <script>
@@ -165,10 +165,10 @@
     <!-- <script src="/public/allChat/js/underscore-min.js"></script> -->
     <script type="text/template" id="message-template">
         <{ for(var i = data.length-1;i >= 0;i--){ }>
-        <{ if(data[i].from != "<%= username %>") { }>
+        <{ if(data[i].from.username != "<%= username %>") { }>
     <div class="message-list message-list-left">
         <div class="list-group-header">
-            <img src="<{= data[i].avatar }>" class="avatar"/><em class="list-group-item-heading"><{= data[i].from }></em>
+            <img src="<{= data[i].from.avatar }>" class="avatar"/><em class="list-group-item-heading"><{= data[i].from.username }></em>
         </div>
         <div class="list-group-item">
             <i style="position: absolute" class="fa fa-menu-left"></i>
@@ -182,7 +182,7 @@
     <{ }else { }>
     <div class="message-list message-list-right">
         <div class="list-group-header">
-            <em class="list-group-item-heading"><%= username %></em><img src="<{= data[i].avatar }>" class="avatar"/>
+            <em class="list-group-item-heading"><%= username %></em><img src="<{= data[i].from.avatar }>" class="avatar"/>
         </div>
         <div class="list-group-item">
             <i style="position: absolute" class="fa fa-menu-right"></i>

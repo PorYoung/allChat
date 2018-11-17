@@ -3,7 +3,10 @@ module.exports = app => {
   const Schema = mongoose.Schema;
 
   const ConnectionSchema = new Schema({
-    username: String,
+    user: {
+      type: String,
+      ref: 'User',
+    },
     socketid: String,
     room: String,
   });

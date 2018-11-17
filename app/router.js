@@ -13,7 +13,7 @@ module.exports = app => {
   router.get('/', controller.page.index);
   router.get('/login', controller.page.login);
   router.get('/register', controller.page.register)
-  router.get('/register/checkUsername', controller.user.checkUsername);
+  router.get('/register/checkUserid', controller.user.checkUserid);
   router.get('/allChat', controller.page.allChat);
   router.get('/allChat/getUserinfo', controller.allChat.getUserinfo);
   router.get('/allChat/getMessage', controller.allChat.getMessage);

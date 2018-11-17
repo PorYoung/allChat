@@ -15,7 +15,7 @@ module.exports = appInfo => {
     excludeUrl: {
       'ALL': ['/', '/login', '/register'],
       'POST': [],
-      'GET': ['/register/checkUsername'],
+      'GET': ['/register/checkUserid'],
     },
   };
 

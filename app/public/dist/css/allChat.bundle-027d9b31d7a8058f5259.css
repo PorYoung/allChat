@@ -109,18 +109,17 @@ body,
 @media screen and (min-width: 768px) {
   body {
     display: flex;
+    justify-content: center;
   }
   .body {
     width: 800px;
-    margin: 0 auto !important;
     border-left: 1px solid #cccccc;
     border-right: 1px solid #cccccc;
     background: #eeeeee;
   }
   .infoMenuWrap {
-    flex: 1;
+    width: 400px;
     height: 100%;
-    background: #318CCF;
   }
   .message-list {
     margin-top: 8px;
@@ -193,6 +192,9 @@ body,
     right: 0;
   }
 }
+.message-list {
+  clear: both;
+}
 .message-list .avatar {
   width: 40px;
   height: 40px;
@@ -253,7 +255,6 @@ body,
   flex-direction: column;
   align-items: flex-start;
   margin-left: 8px;
-  clear: both;
 }
 .message-list-left .list-group-header {
   display: flex;

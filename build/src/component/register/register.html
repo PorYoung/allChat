@@ -22,7 +22,12 @@
             </div>
             <form>
                 <div class="form-group">
-                    <label for="username">Username</label>
+                    <label for="userid">UserID(不可更改)</label>
+                    <input type="text" maxlength="16" class="form-control" id="userid" name="userid" placeholder="UserID(unique)">
+                    <span class="check-icon"></span>
+                </div>
+                <div class="form-group">
+                    <label for="username">Username(默认为UserID)</label>
                     <input type="text" maxlength="16" class="form-control" id="username" name="username" placeholder="Username">
                     <span class="check-icon"></span>
                 </div>

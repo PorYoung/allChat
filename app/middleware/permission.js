@@ -14,8 +14,9 @@ module.exports = (options, app) => {
     } else if (method.toUpperCase() == 'GET' && excludeUrl['GET'].includes(pathname)) {
       await next();
     } else {
-      let username = ctx.session.username;
-      if (username == null) {
+      console.log(ctx.session);
+      let userid = ctx.session.userid;
+      if (userid == null) {
         ctx.status = 403;
         ctx.body = 'Permission Forbidden';
       } else {
