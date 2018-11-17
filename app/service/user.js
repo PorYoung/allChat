@@ -2,7 +2,7 @@ const Service = require('egg').Service;
 class UserService extends Service {
   async findOneByUsername(username) {
     return this.ctx.model.User.findOne({
-      username: username
+      username: username,
     });
   }
 
@@ -19,8 +19,6 @@ class UserService extends Service {
       registerDate: registerDate,
       loginDate: registerDate,
       avatar: defaultAvatar,
-      connected: true,
-      connectIp: ctx.request.ip,
     });
   }
 }

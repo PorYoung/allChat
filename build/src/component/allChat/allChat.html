@@ -1,439 +1,178 @@
 <!DOCTYPE html>
 <html lang="zh-CN" xmlns="http://www.w3.org/1999/html">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+
     <title>allChat</title>
     <!--jquery-emoji-->
-    <link rel="stylesheet" href="/public/allChat/emoji/lib/css/jquery.mCustomScrollbar.min.css"/>
-    <link rel="stylesheet" href="/public/allChat/emoji/src/css/jquery.emoji.css"/>
+    <link rel="stylesheet" href="/public/allChat/emoji/lib/css/jquery.mCustomScrollbar.min.css" />
+    <link rel="stylesheet" href="/public/allChat/emoji/src/css/jquery.emoji.css" />
     <link href="/public/allChat/plus/css/jquery.popuplayer.css" rel="stylesheet">
     <link href="/public/allChat/plus/css/blower-loading.css" rel="stylesheet">
-    <style>
-        html,body{
-            height: 100%;
-            overflow: hidden;
-        }
-        #notification{
-            position: absolute;
-            background: #eeeeee;
-            border-radius: 5px;
-            height: 30px;
-            top: 40px;
-            display: none;
-            text-align: center;
-            line-height: 30px;
-        }
-        #listPanel::-webkit-scrollbar{
-            width: 3px;
-        }
-        #listPanel::-webkit-scrollbar-track{
-            background: #ffffff;
-        }
-        #listPanel::-webkit-scrollbar-thumb{
-            /* background: #868686; */
-            background: #FFA54F;
-            border-radius: 2em;
-        }
-        #listPanel{
-            overflow-x: hidden;
-            overflow-y: auto;
-            margin-bottom: 1px;
-            background: #ffffff;
-        }
-        #header{
-            height: 40px;
-            background: #50728f;
-            border-radius: 5px;
-            overflow: hidden;
-            text-align: center;
-            position: relative;
-        }
-        #header img{
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            position: absolute;
-            left: 0;
-            /*top: 5px;*/
-        }
-        #header span{
-            font-size: 20px;
-            font-weight: 800;
-            line-height: 40px;
-        }
-        @media screen and (min-width: 768px){
-            body{
-                width: 800px;
-                margin: 0 auto;
-                border-left: 1px solid #cccccc;
-                border-right: 1px solid #cccccc;
-                background: #eeeeee;
-            }
-            .message-list{
-                margin-top: 5px;
-                width: 400px;
-            }
-            #listPanel{
-                height: calc(100vh - 51px - 40px);
-            }
-            #inputBox #inputText,button{
-                height: auto;
-                min-height: 50px;
-                max-height: 100px;
-            }
-            .message-list-right .avatar{
-                /* left: 173%; */
-                float: right;
-                right: -98%;
-            }
-            .message-list-right em{
-                left: calc(188% - <%= username.toString().length * 8 %>px);
-                top: 10px !important;
-            }
-            .message-list-right .list-group-item{
-                left: 87%;
-                border-top-right-radius: 10px;
-                clear: both;
-            }
-            .message-list-right .glyphicon-menu-right{
-                left: 394px;
-            }
-            #notification{
-                width: 800px;
-            }
-            .emoji_container{
-                width: 544px;
-            }
-        }
-        @media screen and (max-width: 767px){
-            html,body{
-                width: 100%;
-                position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                right: 0;
-            }
-            .message-list{
-                margin-top: 5px;
-                width: 60%;
-            }
-            #listPanel{
-                height: calc(100vh - 41px - 40px);
-            }
-            #inputBox #inputText,button{
-                height: auto;
-                min-height: 40px;
-                max-height: 100px;
-            }
-            .message-list-right{
-                float: right;
-                margin-right: 50px;
-            }
-           .message-list-left{
-                clear: both;
-            }
-            .message-list-right .avatar{
-                float: right;
-                right: -45px;
-            }
-            .message-list-right em{
-                top: 10px !important;
-                left: calc(100% - <%= username.toString().length * 8 %>px);
-            }
-            .message-list-right .list-group-item{
-                border-top-right-radius: 10px;
-                clear: both;
-            }
-            .message-list-right .glyphicon-menu-right{
-                left: calc(100% - 3px);
-            }
-            #notification{
-                width: 100%;
-            }
-            .emoji_container{
-                width: 100%;
-            }
-        }
-        .message-list .avatar{
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            border: 1px solid #cccccc;
-            position: relative;
-            top: 10px;
-        }
-        .message-list-left .avatar{
-            left: 5px;
-        }
-        .message-list em{
-            position: relative;
-            top: 5px;
-        }
-        .message-list-left em{
-            left: 10px;
-        }
-        .message-list .list-group-item{
-            position: relative;
-        }
-        .message-list-left .list-group-item{
-            left: 50px;
-            border-top-left-radius: 10px;
-        }
-        .message-list .glyphicon-menu-left{
-            position: relative;
-            font-size: 10px;
-            background: #ffffff;
-        }
-        .message-list .glyphicon-menu-right{
-            position: relative;
-            font-size: 10px;
-            background: #ffffff;
-            top: 2px;
-            transform: rotate3d(0,0,1,-18deg);
-        }
-        .message-list-left .glyphicon-menu-left{
-            left: -6px;
-            top: 2px;
-            transform: rotate3d(0,0,1,18deg);
-        }
-        .message-list .list-group-item-text{
-            word-break: break-all;
-        }
-        #inputText{
-            word-break: break-all;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-        .emoji_icon{
-            width: 1.5em;
-            vertical-align: bottom;
-        }
-        #plusPanel{
-            display: none;
-            position: absolute;
-            bottom: 50px;
-            font-size: 3em;
-            text-align: center;
-            color: rgb(253, 122, 0);
-            left: 0;
-            right: 0;
-            background: rgba(175, 169, 169, 0.3);
-            border-radius: 50% 50% 0 0;
-        }
-        #plusPanel > i{
-            width: 2.2em;
-        }
-        #plusPanel > i > span{
-            font-size: 20px !important;
-        }
-        #plusBtnWrap{
-            display: inline-flex;
-        }
-        .plusPanelShow{
-            display: flex !important;
-            opacity: .7 !important;
-            justify-content: center;
-            align-self: center;
-        }
-        .weixinLocalImage,.weixinServerImage{
-            border-top-right-radius: 10px;
-            width: 60%;
-        }
-        .weixinLocalImage{
-            border: 1px solid rgba(32, 187, 14, 0.7);
-        }
-        .imageUnUpload{
-            opacity: .5;
-            filter: blur(1px);
-            border: 1px solid rgb(112, 22, 28)
-        }
-        #loadingWrap{
-            position: absolute;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background: rgb(250, 210, 60);
-            left: 0;
-            right: 0;
-            top: 0;
-            bottom: 0;
-            z-index: 9999;
-        }
-        .filler{
-            animation: loading 3s forwards;
-        }
-        .filler span{
-            animation: loadingcolor 3s alternate infinite;
-        }
-        .marker_container {
-            animation: wowrotate 3s infinite;
-        }
-        @keyframes loading{
-            0%{
-                width: 0;
-            }
-            100%{
-                width: 100%
-            }
-        }
-        @keyframes loadingcolor{
-            0%{
-                color:white;
-            }
-            25%{
-                opacity: .5
-            }
-            50%{
-                opacity:.8
-            }
-            75%{
-                opacity:.7
-            }
-            100%{
-                color:darkorange;
-                opacity:1;
-            }
-        }
-        #votePanel{
-            overflow-x: hidden;
-            overflow-y: auto;
-            position: relative;
-            background: url(/public/image/default_background.jpg);
-            background-size: 100vh 100%;
-            height: 100vh;
-            text-overflow: ellipsis;
-            box-shadow: -1px 0px 5px 2px rgba(0, 0, 0, 0.3);
-        }
-        #votePanel > p, #votePanel > div{
-            height: 100px;
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            overflow:hidden;
-            box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.3);
-            transition: all 1s;
-        }
-        #votePanel img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            box-shadow: 0 0 5px rgba(255,255,255,.5)
-        }
-        #votePanel #voteCloseBtn{
-            color: darkorange;
-            width: 50px;
-            height: 50px;
-            font-size:2em;
-            position: absolute;
-            bottom: 0;
-            left: calc(50% - 25px);
-            border-radius: 50%;
-        }
-        #votePanel::-webkit-scrollbar{
-            width: 3px;
-        }
-        #votePanel::-webkit-scrollbar-track{
-            background: #ffffff;
-        }
-        #votePanel::-webkit-scrollbar-thumb{
-            /* background: #868686; */
-            background: #FFA54F;
-            border-radius: 2em;
-        }
-        #voteSubmit{
-             border-bottom:1px solid rgb(57,138,202);
-             text-align:center;
-             height:auto !important;
-             position:fixed; 
-             bottom:0;
-             width: 70%;
-             background:rgba(0, 0, 0, 0.18);
-        }
-        #voteSubmit > span:first-child{
-            flex:6;padding:3px 5px;
-            background:rgba(57,138,202,.7);
-            border-radius:0 2em 0 0;
-        }
-        #voteSubmit > span:last-child{
-             flex:4;
-             color:white;
-        }
-    </style>
 </head>
-<!--全屏加载-->
+
 <div id="loadingWrap">
-        <div id="loadingContainer">
-            <div class="loadingbar">
-                <div class="marker_container">
-                    <div class="marker"></div>
-                    <div class="marker"></div>
-                    <div class="marker"></div>
-                    <div class="marker"></div>
+    <div id="loadingContainer">
+        <div class="loadingbar">
+            <div class="marker_container">
+                <div class="marker"></div>
+                <div class="marker"></div>
+                <div class="marker"></div>
+                <div class="marker"></div>
+            </div>
+            <div class="filler_wrapper">
+                <div class="filler">
+                    <span class="value">waiting...</span>
                 </div>
-                <div class="filler_wrapper">
-                    <div class="filler">
-                        <span class="value">waiting...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<body>
+    <div class="body" oncontextmenu="return false;" style="height:100vh">
+        <header id="header">
+            <img src="<%= avatar %>" alt="<%= username%>" title="<%= username%>">
+            <span>allChat</span>
+        </header>
+
+        <div class="list-group" id="listPanel"></div>
+
+        <div class="input-group" id="inputBox">
+            <span class="input-group-btn">
+                <div id="plusBtnWrap">
+                    <button class="btn btn-default" id="emojiBtn" type="button">😊</button>
+                    <button class="btn btn-default" id="plusBtn" type="button">➕</button>
+                </div>
+            </span>
+            <!--<input type="text" class="form-control" id="inputText" placeholder="Search for...">-->
+            <div contenteditable="true" class="form-control" id="inputText"></div>
+
+            <span class="input-group-btn">
+                <button class="btn btn-default" id="sendBtn" type="button">Go!</button>
+            </span>
+        </div>
+
+        <div id="plusPanel">
+            <label for="chooseImage">
+                <i class="fa fa-photo" id="showImageBtn" aria-hidden="true"><span>图片</span></i>
+            </label>
+            <input id="chooseImage" type="file" style="display:none;">
+            <label>
+                <i class="fa fa-bar-chart" id="voteShow" aria-hidden="true"><span>投票</span></i>
+            </label>
+        </div>
+
+        <div id="notification"></div>
+    </div>
+    <div class="infoMenuWrap">
+        <div id="accordion">
+            <div class="card">
+                <div class="card-header" id="headingOne">
+                    <h5 class="mb-0">
+                        <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="true"
+                            aria-controls="collapseOne">
+                            Collapsible Group Item #1
+                        </button>
+                    </h5>
+                </div>
+
+                <div id="collapseOne" class="collapse show" aria-labelledby="headingOne" data-parent="#accordion">
+                    <div class="card-body">
+                        Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid.
+                        3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt
+                        laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin
+                        coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes
+                        anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings
+                        occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't
+                        heard of them accusamus labore sustainable VHS.
                     </div>
                 </div>
             </div>
         </div>
     </div>
-<body oncontextmenu="return false;" style="height:100vh">
-<header id="header">
-    <img src="<%= avatar %>" alt="<%= username%>" title="<%= username%>">
-    <span>allChat</span>
-</header>
-<!--消息列表-->
-<div class="list-group" id="listPanel"></div>
-<!--消息发送框-->
-<div class="input-group" id="inputBox">
-    <span class="input-group-btn">
-        <div id="plusBtnWrap">
-            <button class="btn btn-default" id="emojiBtn" type="button">😊</button>
-            <button class="btn btn-default" id="plusBtn" type="button">➕</button>
-        </div>
-    </span>
-    <!--<input type="text" class="form-control" id="inputText" placeholder="Search for...">-->
-    <div contenteditable="true" class="form-control" id="inputText"></div>
-
-    <span class="input-group-btn">
-        <button class="btn btn-default" id="sendBtn" type="button">Go!</button>
-    </span>
-</div>
-<!--功能键-->
-<div id="plusPanel">
-    <i class="fa fa-photo" id="wexinImage" aria-hidden="true"><span>图片</span></i>
-    <i class="fa fa-bar-chart" id="voteShow" aria-hidden="true"><span>投票</span></i>
-</div>
-<!--通知-->
-<div id="notification"></div>
-<script> 
-  window.jQuery || document.write('<script src="/public/allChat/emoji/lib/script/jquery.min.js"><\/script>')
-</script>
-<!--jquery-emoji require start-->
-<!--(Optional) the js for jquery.mCustomScrollbar's addon-->
-<script src="/public/allChat/emoji/lib/script/jquery.mousewheel-3.0.6.min.js"></script>
-<!--the js for jquery.mCustomScrollbar-->
-<script src="/public/allChat/emoji/lib/script/jquery.mCustomScrollbar.min.js"></script>
-<!--the js for this plugin-->
-<script src="/public/allChat/emoji/src/js/jquery.emoji.js"></script>
-<!--jquery-emoji require end-->
-<script src="/public/allChat/js/myLoading.js"></script>
-<script src="/public/allChat/js/myTouchEvent.js"></script>
-<!-- underscroe模板 -->
-<script src="/public/allChat/js/underscore-min.js"></script>
-<script type="text/template" id="message-template">
-    <{ for(var i = data.length-1;i >= 0;i--){ }>
+    <script>
+        window.jQuery || document.write('<script src="/public/allChat/emoji/lib/script/jquery.min.js"><\/script>')
+    </script>
+    <!--jquery-emoji require start-->
+    <!--(Optional) the js for jquery.mCustomScrollbar's addon-->
+    <script src="/public/allChat/emoji/lib/script/jquery.mousewheel-3.0.6.min.js"></script>
+    <!--the js for jquery.mCustomScrollbar-->
+    <script src="/public/allChat/emoji/lib/script/jquery.mCustomScrollbar.min.js"></script>
+    <!--the js for this plugin-->
+    <script src="/public/allChat/emoji/src/js/jquery.emoji.js"></script>
+    <!--jquery-emoji require end-->
+    <script src="/public/allChat/js/myLoading.js"></script>
+    <script src="/public/allChat/js/myTouchEvent.js"></script>
+    <script>
+        $("#inputText").emoji({
+            button: "#emojiBtn",
+            showTab: true,
+            animation: 'slide',
+            icons: [{
+                name: "QQ表情",
+                path: "/public/allChat/emoji/src/img/qq/",
+                maxNum: 91,
+                excludeNums: [41, 45, 54],
+                file: ".gif",
+                placeholder: "#qq_{alias}#"
+            }, {
+                name: "贴吧表情",
+                path: "/public/allChat/emoji/src/img/tieba/",
+                maxNum: 50,
+                file: ".jpg",
+                placeholder: "#tieba_{alias}#"
+            }]
+        }).on("input propertychange", function () {
+            var height = $(this)[0].clientHeight,
+                minHeight = parseInt($(this).css("minHeight"));
+            var innerHtml = $(this).html();
+            var breakLine = innerHtml.match(/\<div\>|\<br\>/g);
+            breakLine = breakLine==null?0:breakLine;
+            if (height > minHeight) {
+                $("#sendBtn").css("height", height);
+                $("#emojiBtn").css("height", height);
+                $("#listPanel").css("height", "calc(100vh - 40px - " + height + "px)");
+                $("#listPanel").animate({
+                    scrollTop: $("#listPanel")[0].scrollHeight - $("#listPanel")[0].clientHeight
+                }, 300);
+            } else if (height < minHeight || breakLine < 1) {
+                height = minHeight;
+                $("#sendBtn").css("height", height);
+                $("#emojiBtn").css("height", height);
+                $("#listPanel").css("height", "calc(100vh - 40px - " + height + "px)");
+            }
+            if (breakLine < 1) {
+                height = minHeight;
+                $("#sendBtn").css("height", height);
+                $("#emojiBtn").css("height", height);
+                $("#listPanel").css("height", "calc(100vh - 40px - " + height + "px)");
+            }
+        })
+        $("#emojiBtn").click(function (event) {
+            setTimeout(function () {
+                $(".emoji_container").css({
+                    top: "",
+                    bottom: $("#emojiBtn").css("height")
+                });
+            }, 1);
+        })
+    </script>
+    <!-- underscroe -->
+    <!-- <script src="/public/allChat/js/underscore-min.js"></script> -->
+    <script type="text/template" id="message-template">
+        <{ for(var i = data.length-1;i >= 0;i--){ }>
         <{ if(data[i].from != "<%= username %>") { }>
     <div class="message-list message-list-left">
-        <img src="<{= data[i].avatar }>" class="avatar"/><em class="list-group-item-heading"><{= data[i].from }></em>
+        <div class="list-group-header">
+            <img src="<{= data[i].avatar }>" class="avatar"/><em class="list-group-item-heading"><{= data[i].from }></em>
+        </div>
         <div class="list-group-item">
-            <i style="position: absolute" class="glyphicon glyphicon-menu-left"></i>
-            <{ if(!!data[i].MsgType && data[i].MsgType == "image"){ }>
+            <i style="position: absolute" class="fa fa-menu-left"></i>
+            <{ if(!!data[i].type && data[i].type == "image"){ }>
             <p class="list-group-item-text"><img src="<{= data[i].mediaId }>" data-imgurl="<{= data[i].mediaId }>" class="weixinServerImage weixinServerImageActive"></p>
             <{ }else{ }> 
             <p class="list-group-item-text"><{= data[i].content }></p>
@@ -442,10 +181,12 @@
     </div>
     <{ }else { }>
     <div class="message-list message-list-right">
-        <em class="list-group-item-heading"><%= username %></em><img src="<{= data[i].avatar }>" class="avatar"/>
+        <div class="list-group-header">
+            <em class="list-group-item-heading"><%= username %></em><img src="<{= data[i].avatar }>" class="avatar"/>
+        </div>
         <div class="list-group-item">
-            <i style="position: absolute" class="glyphicon glyphicon-menu-right"></i>
-            <{ if(!!data[i].MsgType && data[i].MsgType == "image"){ }>
+            <i style="position: absolute" class="fa fa-menu-right"></i>
+            <{ if(!!data[i].type && data[i].type == "image"){ }>
             <p class="list-group-item-text"><img src="<{= data[i].mediaId }>" data-imgurl="<{= data[i].mediaId }>" class="weixinServerImage weixinServerImageActive"></p>
             <{ }else{ }> 
             <p class="list-group-item-text"><{= data[i].content }></p>
@@ -454,72 +195,48 @@
     </div>
     <{ } }>
     <{ } }>
-</script>
-<!--聊天系统前端业务逻辑-->
-<!--<script src="/socket.io/socket.io.js"></script>-->
-<script src="/public/allChat/js/myUtils.js"></script>
-<!--<script src="/static/js/weixin.js"></script>-->
-<script src="/public/allChat/plus/js/jquery.popuplayer.js"></script>
-<!--div id="votePanel" data-vote-id="12345" style="top:0;width:70vw;position:absolute;z-index:9999;">
-    <div style="border-bottom:1px solid rgb(57,138,202);text-align:center;">
-        <span style="flex:3;padding:3px 5px;background:rgba(57,138,202,.7);border-radius:0 2em 2em 0;">投票主题</span>
-        <span style="flex:7;color:white">title</span>
-    </div>
-    <p data-option-id="1">
-        <span>content</span>
-        <i><img src="/public/image/logo.png"></i>
-    </p>
-    <p data-option-id="2">
-        <span>content</span>
-        <i><img src="/public/image/logo.png"></i>
-    </p>
-    <p data-option-id="3">
-        <span>content</span>
-        <i><img src="/public/image/logo.png"></i>
-    </p>
-    <p data-option-id="3">
-        <span>content</span>
-        <i><img src="/public/image/logo.png"></i>
-    </p>
-    <p data-option-id="3">
-        <span>content</span>
-        <i><img src="/public/image/logo.png"></i>
-    </p>
-    <p data-option-id="3">
-        <span>content</span>
-        <i><img src="/public/image/logo.png"></i>
-    </p>
-    <div id="voteSubmit">
-        <span>选好了吗😉</span>
-        <span>okay!👌</span>
-    </div>
-</div-->
-
-<!--script>
-    $(function($){
-        var flag = 1
-        $("#votePanel").children("p").click(function(){
-            if($(this).attr("data-vote-choose") == "1"){
-                $(this).attr({"data-vote-choose":"0"}).css({
-                    background: "initial",
-                    transform: "scale(1,1)"
-                },200)
-            }else{
-                if(flag == "0"){
-                    $("[data-vote-choose='1']").attr({"data-vote-choose":"0"}).css({
-                        background: "initial",
-                        transform: "scale(1,1)"
-                    },200)
-                }
-                $(this).attr({"data-vote-choose":"1"}).css({
-                    background: "rgba(100, 205, 100, 0.3)",
-                    transform: "scale(1.1,1.1)"
-                },200)
-            }
-            
+    </script>
+    <script src="/public/allChat/js/myUtils.js"></script>
+    <script src="/public/allChat/plus/js/jquery.popuplayer.js"></script>
+    <!-- <script>
+        //图像裁剪上传
+        var cropboxHTML = `<div class="cropboxCloseWrap"><i class="cropboxClose">--</i><span>完成</span></div>
+        <div class="imageBox">
+            <div class="thumbBox"></div>
+            <div class="spinner" style="display: none">Loading...</div>
+        </div>
+        <div class="imageBoxPrev">
+            <div class="imageBoxAction"> 
+                <div class="new-contentarea tc"> 
+                    <a href="javascript:void(0)" class="upload-img">
+                        <label for="upload-avatar">选择图像</label>
+                    </a>
+                    <input type="file" class="" name="upload-avatar" id="upload-avatar" />
+                </div>
+                <input type="button" id="btnCrop"  class="Btnsty_peyton" value="裁切">
+                <input type="button" id="btnZoomIn" class="Btnsty_peyton" value="+"  >
+                <input type="button" id="btnZoomOut" class="Btnsty_peyton" value="-" >
+            </div>
+            <div class="cropped"></div>
+        </div>
+        </div>`
+        $('#showImageBtn').PopupLayer({
+            content: cropboxHTML, // 内容，可以传入纯文本或类名或html
+            target: "body", // 把弹出层添加到的目标节点
+            to: "right", // 向哪个方向展开
+            screenRatio: .5, // 占屏幕百分比
+            blur: true, // 是否开启毛玻璃效果
+            blurAreas: "#listPanel", //默认body > *
+            color: "#000", // 文本颜色
+            backgroundColor: "#eee", // 背景颜色
+            contentToggle: false, // 点击content是否关闭弹出层
+            // closeBtn: null,  // 指定关闭按钮
+            // closeCallbackBefore: null,   //关闭前执行的函数
+            // openCallback: null, // 展开的回调
+            // closeCallback: null // 关闭的回调
         })
-    })
-</script-->
+    </script> -->
 
 </body>
+
 </html>

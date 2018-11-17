@@ -9,7 +9,15 @@ module.exports = appInfo => {
   config.keys = appInfo.name + '_PorYoung';
 
   // add your config here
-  config.middleware = [];
+  config.middleware = ['permission'];
+
+  config.permission = {
+    excludeUrl: {
+      'ALL': ['/', '/login', '/register'],
+      'POST': [],
+      'GET': ['/register/checkUsername'],
+    },
+  };
 
   config.view = {
     mapping: {
@@ -31,7 +39,15 @@ module.exports = appInfo => {
     },
   };
 
-  exports.io = {
+  config.session = {
+    key: 'EGG_SESS',
+    maxAge: 24 * 3600 * 1000, // 1 天
+    httpOnly: true,
+    encrypt: true,
+    renew: true,
+  };
+
+  config.io = {
     namespace: {
       // '/': {
       //   connectionMiddleware: ['auth'],
@@ -53,6 +69,13 @@ module.exports = appInfo => {
   // };
   config.appConfig = {
     defaultAvatar: '/public/image/default_avatar.jpg',
+    imagePublicPath: '/public/image',
+    defaultChatRoom: 'default',
+    defaultChatRoomMax: 999,
+    messageSplitLimit: 8,
+  };
+  config.logger = {
+    level: 'DEBUG',
   };
   return config;
 };

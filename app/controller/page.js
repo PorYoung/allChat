@@ -12,10 +12,16 @@ class HomeController extends Controller {
   }
 
   async login() {
+    if(this.ctx.session.username){
+      return this.ctx.redirect('/allChat');
+    }
     await this.ctx.render('login');
   }
 
   async register() {
+    if(this.ctx.session.username){
+      return this.ctx.redirect('/allChat');
+    }
     await this.ctx.render('register');
   }
 

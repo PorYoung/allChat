@@ -4,18 +4,24 @@ module.exports = app => {
       const message = this.ctx.args[0];
       await this.ctx.socket.emit('res', `Hi! I've got your message: ${message}`);
     }
-    async connection() {
-      const {ctx} = this;
-      console.log('connected!');
-      ctx.socket.emit('hi', 'welcome');
-      ctx.socket.broadcast.emit("message", "this is a message");
-      // ctx.socket.on('notification', (msg) => {
-      //   console.log(msg);
-      //   socket.emit("notification", {
-      //     status: 'ok',
-      //     content: 'nothing'
-      //   })
-      // })
+    async roomMessage() {
+      const {
+        ctx,
+        service
+      } = this;
+      const socket = ctx.socket;
+      const helper = ctx.helper;
+      let message = ctx.args[0] || {};
+
+      //save to database
+      await service.message.saveMessage(Object.assign({
+        toType: 'room',
+        date: new Date().getTime(),
+      }, message));
+
+      let room = Object.keys(socket.rooms)[0];
+      message = helper.parseMsg('room_message', message);
+      socket.to(room).emit('room_message', message);
     }
   }
   return allChatController

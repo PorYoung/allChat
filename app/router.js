@@ -16,12 +16,14 @@ module.exports = app => {
   router.get('/register/checkUsername', controller.user.checkUsername);
   router.get('/allChat', controller.page.allChat);
   router.get('/allChat/getUserinfo', controller.allChat.getUserinfo);
+  router.get('/allChat/getMessage', controller.allChat.getMessage);
 
   router.post('/login', controller.user.login);
   router.post('/register', controller.user.register);
+  router.post('/allChat/uploadImage', controller.allChat.uploadImage);
 
-  // io.of('/').route('allChat', io.controller.allChat.ping);
   global.allChat = io.of('/allChat');
   allChat.route('allChat', io.controller.allChat.ping);
   allChat.route('connection', io.controller.allChat.connection);
+  allChat.route('room_message', io.controller.allChat.roomMessage);
 };

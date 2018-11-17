@@ -5,20 +5,27 @@ const Controller = require('egg').Controller;
 class UserController extends Controller {
   async login() {
     const {ctx, service} = this;
-    let {username, password} = ctx.request.body;
+    let {username, password, rememberMe} = ctx.request.body;
     let userinfo = await service.user.findOneByUsername(username);
-    if(userinfo){
+    if (userinfo && userinfo.password == password) {
       ctx.session.username = username;
+      if (rememberMe) ctx.session.maxAge = ms('30d');
       return ctx.body = '1';
     }
     return ctx.body = '-1';
   }
 
-  async register(){
-    const {ctx, service} = this;
-    let {username, password} = ctx.request.body;
+  async register() {
+    const {
+      ctx,
+      service
+    } = this;
+    let {
+      username,
+      password
+    } = ctx.request.body;
     let userinfo = await service.user.findOneByUsername(username);
-    if(userinfo){
+    if (userinfo) {
       return ctx.body = '-1'
     }
     await service.user.createUser(username, password);
@@ -26,11 +33,16 @@ class UserController extends Controller {
     return ctx.body = '1';
   }
 
-  async checkUsername(){
-    const {ctx, service} = this
-    let {username} = ctx.request.query;
+  async checkUsername() {
+    const {
+      ctx,
+      service
+    } = this
+    let {
+      username
+    } = ctx.request.query;
     let userinfo = await service.user.findOneByUsername(username);
-    if(userinfo){
+    if (userinfo) {
       return ctx.body = '-1';
     }
     return ctx.body = '1';

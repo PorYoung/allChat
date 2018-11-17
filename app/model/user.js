@@ -3,7 +3,11 @@ module.exports = app => {
   const Schema = mongoose.Schema;
 
   const UserSchema = new Schema({
-    username: String,
+    username: {
+      type: String,
+      index: true,
+      unique: true
+    },
     password: String,
     //可用ObjectId.getTimestamp()
     registerDate: String,
@@ -14,8 +18,6 @@ module.exports = app => {
     //增加安全提示:该用户存在同时登录冲突记录
     dangerLog: Boolean,
     avatar: String,
-    connected:Boolean,
-    connectIp: String
   });
 
   return mongoose.model('User', UserSchema);

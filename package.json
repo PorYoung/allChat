@@ -19,6 +19,7 @@
     "egg-webpack-vue": "^2.0.1",
     "extract-text-webpack-plugin": "^3.0.2",
     "file-loader": "^2.0.0",
+    "formidable": "^1.2.1",
     "html-loader": "^0.5.5",
     "html-webpack-plugin": "^3.2.0",
     "less": "^3.8.1",
@@ -49,9 +50,9 @@
     "node": ">=8.9.0"
   },
   "scripts": {
-    "start": "egg-scripts start --daemon --title=egg-server-allChat",
+    "start": "egg-scripts start --sticky --daemon --title=egg-server-allChat",
     "stop": "egg-scripts stop --title=egg-server-allChat",
-    "dev": "egg-bin dev",
+    "dev": "egg-bin dev --sticky",
     "debug": "egg-bin debug",
     "test": "npm run lint -- --fix && npm run test-local",
     "test-local": "egg-bin test",
