@@ -12,4 +12,17 @@ module.exports = {
       },
     };
   },
+  parseIPAddress(ip) {
+    if (ip.indexOf('::ffff:') !== -1) {
+      ip = ip.substring(7);
+    }
+    return ip;
+  },
+  socketidRemoveNamespace(id, namespace='allChat'){
+    namespace = `/${namespace}#`
+    if (id.indexOf(namespace) !== -1) {
+      id = id.substring(namespace.length);
+    }
+    return id;
+  }
 };

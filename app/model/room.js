@@ -6,7 +6,6 @@ module.exports = app => {
     _id: {
       type: String,
       unique: true,
-      index: true,
       alias: 'roomid',
     },
     max: Number

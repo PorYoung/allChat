@@ -3,9 +3,16 @@
 @avatar-width: 40px;
 @top-height: @avatar-width;
 @bottom-height: 40px;
+@ImageMaxWidth: 400px;
+@MenuWidth: 400px;
+@MessageListWidth: 400px;
+@bodyBackground: rgba(255, 255, 255, .7);
+@cardBackground: @bodyBackground;
+@messageTextBackground: rgba(255, 255, 255, .5);
 
 html,
-body,.body {
+body,
+.body {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -22,6 +29,13 @@ body,.body {
   line-height: 30px;
 }
 
+#privatePlaceHolder {
+  border: none;
+  border-radius: @gaps;
+  font-weight: bold;
+  text-align: center;
+}
+
 /* info box */
 @InfoAccent: #318CCF;
 @InfoBackground: #F3F3F3;
@@ -32,6 +46,13 @@ body,.body {
 @InfoTitleTextColor: white;
 @InfoTextColor: black;
 @InfoArrowHeight: 20px;
+@WarningInfoTitleTextColor: #721c24;
+@WarningInfoTitleBackground: #f8d7da;
+@WarningInfoBorderColor: #f5c6cb;
+@WarningInfoArrowBackground: @WarningInfoTitleBackground;
+@LightInfoBackground: #818182;
+@LightInfoTextColor: #fefefe;
+@LightInfoBorderColor: #fdfdfe;
 
 .message-info {
   background-color: @InfoBackground;
@@ -91,6 +112,54 @@ body,.body {
   }
 }
 
+.message-info.WarnnigInfo {
+  .message-info-arrow {
+    width: @InfoArrowHeight;
+    height: @InfoArrowHeight;
+    background-color: @WarningInfoArrowBackground;
+    border-color: @WarningInfoBorderColor;
+    position: absolute;
+    top: -10px;
+    left: calc(50% - (@InfoArrowHeight/2));
+    -webkit-transform: rotate(45deg);
+    transform: rotate(45deg);
+  }
+
+  .titleContainer {
+    background-color: @WarningInfoTitleBackground;
+    padding: 10px 20px;
+    border-top-left-radius: @InfoBorderRadius;
+    border-top-right-radius: @InfoBorderRadius;
+
+    h3 {
+      font-size: 19px;
+      font-weight: 500;
+      color: @WarningInfoTitleTextColor;
+      -webkit-animation: none;
+      animation: none;
+      margin: 0;
+      padding: 0;
+    }
+  }
+}
+
+.message-info-mini {
+  display: flex;
+  border-radius: @InfoBorderRadius;
+  justify-content: center;
+  align-items: center;
+  clear: both;
+  padding: @gaps;
+
+  .content {
+    background-color: @LightInfoBackground;
+    color: @LightInfoTextColor;
+    border-color: @LightInfoBorderColor;
+    padding: @gaps;
+    border-radius: @InfoBorderRadius;
+  }
+}
+
 #listPanel::-webkit-scrollbar {
   width: 3px;
 }
@@ -109,7 +178,6 @@ body,.body {
   overflow-x: hidden;
   overflow-y: auto;
   margin-bottom: 1px;
-  background: #ffffff;
   display: block;
   padding-bottom: @gaps;
 }
@@ -139,28 +207,60 @@ body,.body {
 }
 
 @media screen and (min-width: 768px) {
-  body{
+  body {
     display: flex;
     justify-content: center;
   }
+
   .body {
     width: 800px;
     // margin: 0 auto !important;
     border-left: 1px solid #cccccc;
     border-right: 1px solid #cccccc;
-    background: #eeeeee;
+    background: @bodyBackground;
   }
-  .infoMenuWrap{
+
+  .infoMenuWrap {
     // flex: 1;
-    width: 400px;
+    width: @MenuWidth;
     height: 100%;
+
+    .card {
+      background: @cardBackground;
+    }
+
     // background: #318CCF;
-    .user-list-item{
-      .user-list-header{
-        .user-list-avatar{
+    .user-list-item {
+      margin: @gaps 0;
+
+      .user-list-header {
+        .user-list-avatar {
           width: @avatar-width;
           height: @avatar-width;
           border-radius: 50%;
+        }
+      }
+
+      .user-list-content {
+        .card-body {
+          div {
+            display: flex;
+            align-items: center;
+
+            span {
+              width: @avatar-width;
+              text-align: center;
+            }
+
+            i {
+              flex: 1;
+            }
+          }
+
+          .sendPrivateMessageBtn {
+            cursor: pointer;
+            color: #007bff;
+          }
         }
       }
     }
@@ -169,7 +269,7 @@ body,.body {
   .message-list {
     margin-top: @gaps;
     padding-top: @gaps;
-    width: 400px;
+    width: @MessageListWidth;
   }
 
   #listPanel {
@@ -203,7 +303,8 @@ body,.body {
 @media screen and (max-width: 767px) {
 
   html,
-  body,.body {
+  body,
+  .body {
     width: 100%;
     position: absolute;
     left: 0;
@@ -211,7 +312,8 @@ body,.body {
     bottom: 0;
     right: 0;
   }
-  .infoMenuWrap{
+
+  .infoMenuWrap {
     display: none;
   }
 
@@ -255,6 +357,7 @@ body,.body {
 
 .message-list {
   clear: both;
+
   .avatar {
     width: @avatar-width;
     height: @avatar-width;
@@ -289,12 +392,21 @@ body,.body {
   .list-group-item-text {
     word-break: break-all;
     margin: 0;
+
+    .privateMessageTip {
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      text-align: center;
+    }
   }
 
   .list-group-item {
     border-top-right-radius: @radius;
     margin: 0 @avatar-width;
-    .imageContent{
+    background: @messageTextBackground;
+
+    .imageContent {
       width: 120px;
       height: 120px;
     }
@@ -373,7 +485,8 @@ body,.body {
 }
 
 .emoji_icon {
-  width: 1.5em;
+  max-width: @ImageMaxWidth;
+  // width: 1.5em;
   vertical-align: bottom;
 }
 

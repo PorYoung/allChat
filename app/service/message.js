@@ -17,7 +17,8 @@ class MessageService extends Service {
       })
       .limit(limit)
       .skip(start)
-      .populate('from','userid username avatar');
+      .populate('from','userid username avatar')
+      .populate('to','userid username avatar');
     let resArr = [];
     queryArr.forEach((doc)=>{
       resArr.push(doc.toObject({virtuals: true}));

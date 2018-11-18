@@ -14,12 +14,11 @@ module.exports = app => {
       let message = ctx.args[0] || {};
 
       //save to database
-      await service.message.saveMessage(Object.assign({ 
+      await service.message.saveMessage(Object.assign({
         date: new Date().getTime(),
       }, message));
-      console.log("message:",message);
 
-      let userinfo = await service.user.findOneByUserid(ctx.session.userid);
+      let userinfo = await service.user.findOneByUserid(ctx.session.user.userid);
       message.from = {
         userid: userinfo.userid,
         username: userinfo.username,
@@ -29,6 +28,44 @@ module.exports = app => {
       let room = Object.keys(socket.rooms)[0];
       message = helper.parseMsg('room_message', message);
       socket.to(room).emit('room_message', message);
+    }
+    async privateMessage() {
+      const {
+        ctx,
+        service
+      } = this;
+      const socket = ctx.socket;
+      const helper = ctx.helper;
+      let message = ctx.args[0] || {};
+
+      //save to database
+      await service.message.saveMessage(Object.assign({
+        date: new Date().getTime(),
+      }, message));
+
+      let userinfo = await service.user.findOneByUserid(ctx.session.user.userid);
+      message.from = {
+        userid: userinfo.userid,
+        username: userinfo.username,
+        avatar: userinfo.avatar,
+      };
+      let toUserinfo = await service.user.findOneByUserid(message.to);
+      if (!toUserinfo) {
+        socket.emit(socket.id, helper.parseMsg('warning', {
+          type: 'warning',
+          content: '该用户不见了=_=!',
+        }));
+      } else {
+        message.to = {
+          userid: toUserinfo.userid,
+          username: toUserinfo.username,
+          avatar: toUserinfo.avatar,
+          socketid: toUserinfo.socketid,
+        };
+        // let room = Object.keys(socket.rooms)[0];
+        let messageParsed = helper.parseMsg('private_message', message);
+        socket.to(message.to.socketid).emit(message.to.socketid, messageParsed);
+      }
     }
   }
   return allChatController

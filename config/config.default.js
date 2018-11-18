@@ -68,11 +68,12 @@ module.exports = appInfo => {
   //   hot: true
   // };
   config.appConfig = {
-    defaultAvatar: '/public/image/default_avatar.jpg',
+    defaultAvatarArr: ['/public/image/default_avatar.jpg', '/public/image/default_avatar_1.jpg', '/public/image/default_avatar_2.jpg', '/public/image/default_avatar_3.jpg', '/public/image/default_avatar_4.jpg', '/public/image/default_avatar_5.jpg', '/public/image/default_avatar_6.jpg', '/public/image/default_avatar_7.jpg', '/public/image/default_avatar_8.jpg', '/public/image/default_avatar_9.jpg', '/public/image/default_avatar_10.jpg'],
     imagePublicPath: '/public/image',
     defaultChatRoom: 'default',
     defaultChatRoomMax: 999,
     messageSplitLimit: 8,
+    allowReconnectionTime: 10 * 1000,
   };
   config.logger = {
     level: 'DEBUG',

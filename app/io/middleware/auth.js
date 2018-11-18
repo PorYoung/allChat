@@ -1,3 +1,4 @@
+let timer = null;
 module.exports = () => {
   return async (ctx, next) => {
     const {
@@ -10,6 +11,9 @@ module.exports = () => {
     const sid = socket.id;
     const nsp = app.io.of('/allChat');
     const query = socket.handshake.query;
+    if (ctx.session.user == null) {
+      return;
+    }
 
     // 用户信息
     const {
@@ -24,19 +28,12 @@ module.exports = () => {
 
       // 踢出用户前发送消息
       socket.emit(sid, helper.parseMsg('deny', msg));
-
-      // 调用 adapter 方法踢出用户，客户端触发 disconnect 事件
-      // nsp.adapter.remoteDisconnect(sid, true, err => {
-      //   logger.error(err);
-      // });
-      // socket.disconnect(true);
     };
     // 检查房间是否存在，不存在则踢出用户
     const hasRoom = await service.room.getRoomInfo({
       _id: room
     });
     const onlineCount = await service.user.countConnectedInRoom(room);
-    console.warn('count:', onlineCount);
     logger.info('#has_room_exist', hasRoom);
     logger.info('#people_in_room', onlineCount);
     if (!hasRoom) {
@@ -58,74 +55,107 @@ module.exports = () => {
     // 用户加入房间
     logger.info('#join', room);
     socket.join(room);
-    await service.user.updateConnectionInfo({
-      userid: ctx.session.userid,
-      socketid: sid,
-      room: room,
-      connected: true,
-    });
 
-    //通知该room中的在线用户
-    nsp.to(room).emit('info', helper.parseMsg('info', {
-      type: 'welcome',
-      content: `用户 ${ctx.session.username} [ID:${ctx.session.userid}]加入了聊天室.`,
-    }));
-    // 在线列表
-    nsp.adapter.clients(rooms, async (err, clients) => {
+    //检查用户连接状态，重连状态不通知在线用户，不更新在线列表
+    let queryInfo = await service.user.findOneByUserid(ctx.session.user.userid);
+    if (!queryInfo) {
+      logger.error('user has been removed from database');
+    }
+    let connected = queryInfo.connected;
+    //在线列表
+    if (connected != 2) {
+      //给新连接用户发送欢迎信息
+      socket.emit(sid, helper.parseMsg('welcome', {
+        type: 'welcome',
+        content: `欢迎来到allChat聊天室，您所在的房间是：${room}.`,
+      }));
       nsp.to(room).emit('online', {
         action: 'join',
         target: 'onlineUsers',
-        message: `User(${ctx.session.userid}) joined.`,
-        userinfo: {
-          userid: ctx.session.userid,
-          username: ctx.session.username,
+        message: `User(${ctx.session.user.userid}) joined.`,
+        userinfo: Object.assign(ctx.session.user, {
           socketid: sid,
           room: room,
-        },
+          connected: 1,
+          ipAddress: helper.parseIPAddress(socket.handshake.address),
+        }),
       });
-      logger.info('#online_join', clients);
-      //给新用户发送在线列表
-      const onlineUsers = await service.user.getConnectionInfoBySocketid(clients);
-      socket.emit('online', {
-        action: 'update',
-        target: 'self',
-        onlineUsers: onlineUsers,
-        onlineCount: onlineCount+1,
-        max: hasRoom.max,
-      });
-    });
-
-    await next();
-    // execute when disconnect.
-    // 用户离开
-    logger.info('#leave', room);
-
-    // 在线列表
-    nsp.adapter.clients(rooms, (err, clients) => {
-      logger.info('#online_leave', clients);
-
-      // 获取 client 信息
-      // const clientsDetail = {};
-      // clients.forEach(client => {
-      //   const _client = app.io.sockets.sockets[client];
-      //   const _query = _client.handshake.query;
-      //   clientsDetail[client] = _query;
-      // });
-
-      // 更新在线用户列表
-      nsp.to(room).emit('online', {
-        clients,
-        action: 'leave',
-        target: 'participator',
-        message: `User(${ctx.session.userid}) leaved.`,
-      });
-    });
+      logger.info('#online_join', sid);
+    }
+    //更新连接状态
     await service.user.updateConnectionInfo({
-      userid: ctx.session.userid,
+      userid: ctx.session.user.userid,
+      socketid: sid,
+      room: room,
+      connected: 1,
+      ipAddress: helper.parseIPAddress(socket.handshake.address),
+    });
+    //清除离开状态定时判断
+    if (timer) {
+      clearTimeout(timer);
+      timer = null;
+    }
+    //给新连接用户发送当前在线列表
+    const onlineUsers = await service.user.getConnectionInfoInRoom(room);
+    socket.emit('online', {
+      action: 'update',
+      target: 'self',
+      onlineUsers: onlineUsers,
+      onlineCount: onlineUsers.length + 1,
+      max: hasRoom.max,
+    });
+    await next();
+
+    //断线一定时间内判断为刷新事件，不触发离开事件
+    await service.user.updateConnectionInfo({
+      userid: ctx.session.user.userid,
       socketid: null,
       room: room,
-      connected: false,
+      connected: 2,
     });
-    console.log(`User(${ctx.session.userid}) disconnection!`);
+    timer = setTimeout(async () => {
+      let userinfo = await service.user.findOneByUserid(ctx.session.user.userid);
+      if (!userinfo) {
+        logger.error('user has been removed from database');
+      }
+      let connectionState = userinfo.connected;
+      // console.log('shedule connected state:', connectionState);
+      if (connectionState == 1) {
+        //刷新操作，不触发离开事件
+        return;
+      } else if (connectionState == 2) {
+        //超时，触发离开事件
+      } else {
+        //已断线，触发离开事件
+      }
+      // execute when disconnect.
+      // 用户离开
+      logger.info('#leave', room);
+
+      // 在线列表
+      nsp.adapter.clients(rooms, (err, clients) => {
+        logger.info('#online_leave', clients);
+
+        // 更新在线用户列表
+        nsp.to(room).emit('online', {
+          action: 'leave',
+          target: 'participator',
+          message: `User(${ctx.session.user.userid}) leave.`,
+          userinfo: Object.assign(ctx.session.user, {
+            socketid: sid,
+            room: room,
+            connected: 0,
+            ipAddress: helper.parseIPAddress(socket.handshake.address),
+          }),
+        });
+      });
+      await service.user.updateConnectionInfo({
+        userid: ctx.session.user.userid,
+        socketid: null,
+        room: room,
+        connected: 0,
+      });
+      logger.info(`User(${ctx.session.user.userid}) disconnection!`);
+    }, app.config.appConfig.allowReconnectionTime);
   };
 };

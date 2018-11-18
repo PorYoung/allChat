@@ -14,12 +14,16 @@ module.exports = (options, app) => {
     } else if (method.toUpperCase() == 'GET' && excludeUrl['GET'].includes(pathname)) {
       await next();
     } else {
-      console.log(ctx.session);
-      let userid = ctx.session.userid;
-      if (userid == null) {
+      let userinfo = ctx.session.user;
+      if (userinfo == null) {
         ctx.status = 403;
         ctx.body = 'Permission Forbidden';
       } else {
+        let user = await ctx.service.user.updateUserIPAddress({
+          userid: userinfo.userid,
+          ipAddress: ctx.request.ip,
+        });
+        ctx.session.user = user;
         await next();
       }
     }

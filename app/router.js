@@ -26,4 +26,5 @@ module.exports = app => {
   allChat.route('allChat', io.controller.allChat.ping);
   allChat.route('connection', io.controller.allChat.connection);
   allChat.route('room_message', io.controller.allChat.roomMessage);
+  allChat.route('private_message', io.controller.allChat.privateMessage);
 };

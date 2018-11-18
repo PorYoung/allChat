@@ -3,11 +3,13 @@ import 'bootstrap/dist/js/bootstrap.min.js';
 import '../../lib/font-awesome-4.7.0/css/font-awesome.min.css';
 import '../../lib/csrfAjax';
 import './allChat.less';
-var $ = require('jquery');
+// var $ = require('jquery');
 const config = {
   userinfo: {},
   socket: {
     room: 'default',
+    onlineCount: 0,
+    max: 999,
     id: null,
   },
 };
@@ -26,6 +28,22 @@ _.templateSettings = {
   interpolate: /\<\{=(.+?)\}\>/g
 };
 
+//定义函数：私发事件，将占位符添加到输入框
+//安全问题：需要对各id做合法性判断
+// <\/input>
+const privateMessageReg = new RegExp(/<input id=\"privatePlaceHolder\".*(data-userid).*(data-username).*(data-socketid)(([\s\S])*?)>/);
+const sendPrivateMessage = function () {
+  let ele = $(this);
+  let socketid = ele.data('socketid');
+  let userid = ele.data('userid');
+  let username = ele.data('username');
+  if ($('#privatePlaceHolder')[0]) {
+    $('#privatePlaceHolder').remove();
+  }
+  let html = $("#inputText").html();
+  $("#inputText").html('').focus().html(`<input id="privatePlaceHolder" data-userid="${userid}" data-username="${username}" data-socketid="${socketid}" value="To ${username} [ID:${userid}]:" disabled>`.concat(html));
+}
+
 //定义函数：显示通知框
 var showNotification = function showNotification(text) {
   $('#notification').html(text).show('fast');
@@ -35,27 +53,43 @@ var showNotification = function showNotification(text) {
 }
 
 //定义行数：显示系统提示
-const infoBoxCompiled = (info) => {
-  let infoBox = `<div class="message-info" id="first"><div class="message-info-arrow"></div><div class="titleContainer"><h3><{= info.type }></h3></div><div class="mainContainer"><p><{= info.content }></p></div></div>`;
+const infoBoxCompiled = (info, boxStyle = 'mini') => {
+  let infoBox = '';
+  if (boxStyle == 'mini') {
+    infoBox = `<div class="message-info-mini"><div class="content"><{= info.content }></div></div>`;
+  } else if (boxStyle == 'Warning') {
+    infoBox = `<div class="message-info WarningInfo" id="first"><div class="message-info-arrow"></div><div class="titleContainer"><h3><{= info.type }></h3></div><div class="mainContainer"><p><{= info.content }></p></div></div>`;
+  } else {
+    infoBox = `<div class="message-info" id="first"><div class="message-info-arrow"></div><div class="titleContainer"><h3><{= info.type }></h3></div><div class="mainContainer"><p><{= info.content }></p></div></div>`;
+  }
   let compiled = _.template(infoBox);
-  return compiled({
-    info
+  compiled = compiled({
+    info,
   });
+  $("#listPanel").append(compiled);
 };
 
 //定义函数：使用消息模板
-var messageBoxCompiled = function messageBoxCompiled(msg, position) {
-  position = position ? position : "left";
+var messageBoxCompiled = function messageBoxCompiled(msg, position = "left", insertTo = "append") {
   /*  var messageBox = !!msg.type && msg.type == "image" ? '<div class="message-list message-list-left"><img src="<{= msg.avatar }>" class="avatar"/><em class="list-group-item-heading"><{= msg.from.username }></em> <div class="list-group-item"> <i style="position: absolute" class="fa fa-menu-left"></i><p class="list-group-item-text"><img src="<{= msg.mediaId }>" data-imgurl="<{= msg.mediaId }>" class="weixinServerImage weixinServerImageActive"></p></div></div>' : '<div class="message-list message-list-left"><img src="<{= msg.avatar }>" class="avatar"/><em class="list-group-item-heading"><{= msg.from.username }></em> <div class="list-group-item"> <i style="position: absolute" class="fa fa-menu-left"></i> <p class="list-group-item-text"><{= msg.content }></p></div></div>' */
-  var messageBox = '<div class="message-list message-list-left"><div class="list-group-header"><img src="<{= msg.from.avatar }>" class="avatar"/><em class="list-group-item-heading"><{= msg.from.username }></em> </div> <div class="list-group-item"> <i style="position: absolute" class="fa fa-menu-left"></i> <p class="list-group-item-text"><{= msg.content }></p></div></div>';
+  var messageBox = '<div class="message-list message-list-left"><div class="list-group-header" title="<{= msg.from.userid }>"><img src="<{= msg.from.avatar }>" class="avatar"/><em class="list-group-item-heading"><{= msg.from.username }></em> </div> <div class="list-group-item"> <i style="position: absolute" class="fa fa-menu-left"></i> <p class="list-group-item-text"><{= msg.content }></p></div></div>';
+  if (msg.to) {
+    var messageBox = '<div class="message-list message-list-left"><div class="list-group-header" title="<{= msg.from.userid }>"><img src="<{= msg.from.avatar }>" class="avatar"/><em class="list-group-item-heading"><{= msg.from.username }></em> </div> <div class="list-group-item"> <i style="position: absolute" class="fa fa-menu-left"></i> <p class="list-group-item-text"><input class="privateMessageTip" value="To <{= msg.to.username }> [ID:<{= msg.to.userid }>]:" disabled><br><{= msg.content }></p></div></div>';
+  }
+  // <input id="privatePlaceHolder" data-userid="${userid}" data-username="${username}" data-socketid="${socketid}" value="To ${username} [ID:${userid}]:" disabled></input>
   if (position === "right") {
     //右
     messageBox = messageBox.replace(/left/g, "right").replace(/(<img.+\/>)(<em.+<\/em>)/, "$2$1");
   }
   var compiled = _.template(messageBox);
-  return compiled({
-    msg
+  compiled = compiled({
+    msg,
   });
+  if (insertTo == 'prepend') {
+    $("#listPanel").prepend(compiled);
+  } else {
+    $("#listPanel").append(compiled);
+  }
 };
 
 //消息页面滚动
@@ -71,51 +105,96 @@ var getPayloadFromMsg = (msg) => {
   return msg.data.payload;
 };
 
+const roomOnlineUserBoxTemplate = (userinfo) => {
+  let userDetailBox = `
+    <div class="user-content-userid">
+      <span class="fa fa-user-circle-o" title="UserID"></span><i>${userinfo.userid}</i>
+    </div>
+    <div class="user-content-ipAdress">
+      <span class="fa fa-map-marker" title="IP Address"></span><i>${userinfo.ipAddress}</i>
+    </div>`
+  if (userinfo.userid != config.userinfo.userid) {
+    // onclick="sendPrivateMessage();"
+    userDetailBox = userDetailBox.concat(`
+    <div class="sendPrivateMessageBtn" id="sendPrivateMessageBtn-${userinfo.userid}" data-username="${userinfo.username}" data-userid="${userinfo.userid}" data-socketid="${userinfo.socketid}"} >
+      <span class="fa fa-commenting-o" title="发私信"></span><i>发私信</i>
+    </div>`);
+  }
+  let userBox =
+    `<div class="card user-list-item" data-socktid="${userinfo.socketid}" data-userid="${userinfo.userid}">
+    <div class="card-header user-list-header" id="user-${userinfo.userid}-btn">
+      <img src="${userinfo.avatar}" class="user-list-avatar">
+      <button class="btn btn-link user-list-username" data-toggle="collapse" data-target="#user-${userinfo.userid}-content" aria-expanded="true" aria-controls="user-${userinfo.userid}-content">
+          ${userinfo.username}
+      </button>
+    </div>
+    <div id="user-${userinfo.userid}-content" class="user-list-content collapse ${userinfo.show?'show':''}" aria-labelledby="user-${userinfo.userid}-btn" data-parent="${userinfo.collapseParent||''}">
+        <div class="card-body" id="user-${userinfo.userid}-list">
+            ${userDetailBox}
+        </div>
+    </div>
+  </div>`
+  return userBox;
+}
 //手风琴一级菜单模板
 const roomCardBoxCompiled = (cardinfo) => {
   let users = cardinfo.onlineUsers;
   let onlineUserBoxs = [];
   users.forEach((user) => {
-    onlineUserBoxs.push(
-      `<div class="card user-list-item" data-socktid="${user.socketid}">
-        <div class="card-header user-list-header" id="room-${cardinfo.room}-user-btn">
-          <img src="${user.avatar}" class="user-list-avatar">
-          <i class="user-list-username">${user.username}</i>
-        </div>
-      </div>`);
+    onlineUserBoxs.push(roomOnlineUserBoxTemplate(user));
   });
   let cardBox =
-    `<div class="card">
+    `<div class="card" id="room-${cardinfo.room}">
     <div class="card-header" id="room-${cardinfo.room}-btn">
         <h5 class="mb-0">
-            <button class="btn btn-link" data-toggle="collapse" data-target="#room-${cardinfo.room}" aria-expanded="true"
-                aria-controls="collapseOne">
+            <button class="btn btn-link" data-toggle="collapse" data-target="#room-${cardinfo.room}-content" aria-expanded="true"
+                aria-controls="room-${cardinfo.room}-content">
                 ${cardinfo.room}
             </button>
-            <i class="card-tips">${cardinfo.onlineCount}/${cardinfo.max}</i>
+            <i class="card-tips room-online-count" data-room="${cardinfo.room}">${cardinfo.onlineCount}</i>
+             / 
+            <i class="card-tips room-online-max" data-room="${cardinfo.room}">${cardinfo.max}</i>
         </h5>
     </div>
 
-    <div id="room-${cardinfo.room}" class="collapse ${cardinfo.show?'show':''}" aria-labelledby="headingOne" data-parent="${cardinfo.collapseParent||''}">
-        <div class="card-body" id="room-${cardinfo.room}-content">
-            ${onlineUserBoxs}
+    <div id="room-${cardinfo.room}-content" class="collapse ${cardinfo.show?'show':''}" aria-labelledby="room-${cardinfo.room}-btn" data-parent="${cardinfo.collapseParent||''}">
+        <div class="card-body" id="room-${cardinfo.room}-list">
+            ${onlineUserBoxs.join('')}
         </div>
     </div>
   </div>`;
   let compiled = _.template(cardBox);
-  return compiled({
-    cardinfo
+  compiled = compiled({
+    cardinfo,
   });
+  if ($(`#room-${cardinfo.room}`)[0]) {
+    $(`#room-${cardinfo.room}`).replaceWith(compiled);
+  } else {
+    $("#accordion").append(compiled);
+  }
+  //绑定发送私信事件
+  $('.sendPrivateMessageBtn').off().on('click', sendPrivateMessage);
 };
-//二级菜单模板-z在线用户列表
-// const roomOnlineUserBoxCompiled
-
+//二级菜单模板-在线用户列表
+const roomOnlineUserBoxCompiled = (userinfo) => {
+  let userBox = roomOnlineUserBoxTemplate(userinfo);
+  let compiled = _.template(userBox);
+  compiled = compiled({
+    userinfo,
+  });
+  if ($(`.user-list-item[data-userid="${userinfo.userid}"]`)[0]) {
+    $(`.user-list-item[data-userid="${userinfo.userid}"]`).replaceWith(compiled);
+  } else {
+    $(`#room-${userinfo.room}-list`).append(compiled);
+  }
+  //绑定事件
+  $(`.sendPrivateMessageBtn[id="sendPrivateMessageBtn-${userinfo.userid}"]`).off().on('click', sendPrivateMessage);
+}
 
 //get user info
 $.get('/allChat/getUserinfo', (data) => {
   if (data && data != -1) {
     Object.assign(config.userinfo, data);
-
     //get history message
     //读取allChat消息
     //0未加载 1加载完成 2无更多消息
@@ -128,10 +207,17 @@ $.get('/allChat/getUserinfo', (data) => {
         if (data == "-1") {
           loadMessageFlag = 2;
         } else {
-          var compiled = _.template($("#message-template").html());
-          $("#listPanel").prepend(compiled({
-            data
-          }));
+          data.forEach((msg) => {
+            if (msg.from.userid == config.userinfo.userid) {
+              messageBoxCompiled(msg, 'right', 'prepend');
+            } else {
+              messageBoxCompiled(msg, 'left', 'prepend');
+            }
+          })
+          /*  var compiled = _.template($("#message-template").html());
+           $("#listPanel").prepend(compiled({
+             data
+           })); */
           loadMessageFlag = 1;
         }
         callback && callback();
@@ -143,7 +229,6 @@ $.get('/allChat/getUserinfo', (data) => {
       loadMessageFlag = 0;
       scrollToBottom();
     });
-
     //定义函数：touch事件
     var myTouchEvent = function () {
       var swip_time = 300,
@@ -233,7 +318,7 @@ $.get('/allChat/getUserinfo', (data) => {
           if (disY >= 80 && dir == "down") {
             result = 3;
             //下拉行为有效
-            // loadMessage(++page);
+            loadMessage(++page);
             console.log('加载中');
             //加载完成后释放 等待30s
             var timer = setInterval(function () {
@@ -327,7 +412,29 @@ $.get('/allChat/getUserinfo', (data) => {
             {
               console.warn('你被强制下线');
               showNotification('你被强制下线');
+              infoBoxCompiled(getPayloadFromMsg(msg), 'Warning');
+              scrollToBottom();
               allChat.close();
+              break;
+            }
+          case 'welcome':
+            {
+              showNotification(`welcome: ${config.userinfo.username}，下拉加载更多历史消息`);
+              infoBoxCompiled(getPayloadFromMsg(msg), 'Welcome');
+              scrollToBottom();
+              break;
+            }
+          case 'warning':
+            {
+              infoBoxCompiled(getPayloadFromMsg(msg), 'Warning');
+              scrollToBottom();
+              break;
+            }
+          case 'private_message':
+            {
+              console.log('private:',msg);
+              messageBoxCompiled(getPayloadFromMsg(msg));
+              scrollToBottom();
               break;
             }
         }
@@ -342,50 +449,126 @@ $.get('/allChat/getUserinfo', (data) => {
         case 'update':
           {
             //push self into onlineUsers
-            msg.onlineUsers.unshift({
+            /* msg.onlineUsers.unshift({
               userid: config.userinfo.userid,
               username: config.userinfo.username,
               socketid: config.socket.id,
               avatar: config.userinfo.avatar,
-            });
-            $("#accordion").append(roomCardBoxCompiled({
+              room: config.socket.room,
+              ipAddress: config.userinfo.ipAddress,
+            }); */
+            roomCardBoxCompiled({
               onlineUsers: msg.onlineUsers,
               room: config.socket.room,
-              onlineCount: msg.onlineUsers.length + 1,
+              onlineCount: msg.onlineUsers.length,
               max: msg.max,
               show: true,
-            }));
+            })
+            config.socket.onlineCount = msg.onlineUsers.length;
+            config.socket.max = msg.max;
             break;
-          }
+          };
+          //new use join
+        case 'join':
+          {
+            roomOnlineUserBoxCompiled(msg.userinfo);
+            config.socket.onlineCount++;
+            //更新room在线人数
+            $(`.room-online-count[data-room="${msg.userinfo.room}"]`).html(config.socket.onlineCount);
+            //通知
+            infoBoxCompiled({
+              type: 'welcome',
+              content: `用户 ${msg.userinfo.username} [ID:${msg.userinfo.userid}]加入了聊天室.`,
+            });
+            scrollToBottom();
+            break;
+          };
+        case 'leave':
+          {
+            let userinfo = msg.userinfo;
+            let userNode = $(`.user-list-item[data-userid="${userinfo.userid}"]`);
+            // let parentNodeId = `#room-${msg.userinfo.room}-list`;
+            //移除用户
+            userNode.remove()
+            /* //将离线用户放在列表最后
+            if (userNode.parents(parentNodeId).nextAll().length > 0) {
+              userNode.parents(parentNodeId).next().after(userNode.parents(parentNodeId).prop('outerHTML'));
+              userNode.parents(parentNodeId).remove();
+            }
+            //设置离线用户背景
+            userNode.css({
+              'background-color': '#eee'
+            }); */
+            config.socket.onlineCount--;
+            //更新room在线人数
+            $(`.room-online-count[data-room="${msg.userinfo.room}"]`).html(config.socket.onlineCount);
+            //通知
+            infoBoxCompiled({
+              type: 'leave',
+              content: `用户 ${msg.userinfo.username} [ID:${msg.userinfo.userid}]离开了.`,
+            });
+            scrollToBottom();
+            break;
+          };
       }
     });
 
     //room message
     allChat.on("room_message", (msg) => {
       msg = getPayloadFromMsg(msg);
-      $("#listPanel").append(messageBoxCompiled(msg));
+      messageBoxCompiled(msg);
       scrollToBottom();
     })
 
     //send room message
     $("#sendBtn").click(function () {
-      var msg = {
-        from: config.userinfo.userid,
-        // to: config.socket.room,
-        toType: 'room',
-        room: config.socket.room,
-        content: $("#inputText").html(),
-      };
-      //内容为空则返回
-      if (!msg.content) return;
-      allChat.emit("room_message", msg);
+      // let hasPrivate = $('#inputText').html().match(privateMessageReg);
+      let msg = {};
+      // console.log(hasPrivate);
+      let hasPrivate = $('#privatePlaceHolder')[0];
+      if (hasPrivate) {
+        let ele = $('#privatePlaceHolder');
+        let toSocketid = ele.data('socketid');
+        let toUserid = ele.data('userid');
+        let toUsername = ele.data('username');
+        ele.remove();
+        //内容为空则返回
+        if (!$("#inputText").html()) return;
+        msg = {
+          from: config.userinfo.userid,
+          to: toUserid,
+          toType: 'private',
+          room: config.socket.room,
+          content: $("#inputText").html(),
+        };
+        allChat.emit("private_message", msg);
+        msg.from = {
+          userid: config.userinfo.userid,
+          username: config.userinfo.username,
+          avatar: config.userinfo.avatar,
+        };
+        msg.to = {
+          userid: toUserid,
+          username: toUsername,
+        }
+      } else {
+        msg = {
+          from: config.userinfo.userid,
+          toType: 'room',
+          room: config.socket.room,
+          content: $("#inputText").html(),
+        };
+        //内容为空则返回
+        if (!msg.content) return;
+        allChat.emit("room_message", msg);
+        msg.from = {
+          userid: config.userinfo.userid,
+          username: config.userinfo.username,
+          avatar: config.userinfo.avatar,
+        };
+      }
       $("#inputText").html("");
-      msg.from = {
-        userid: config.userinfo.userid,
-        username: config.userinfo.username,
-        avatar: config.userinfo.avatar,
-      };
-      $("#listPanel").append(messageBoxCompiled(msg, "right"));
+      messageBoxCompiled(msg, "right");
       var scrollHeight = $("#listPanel")[0].scrollHeight - $("#listPanel")[0].clientHeight;
       $("#listPanel").animate({
         scrollTop: scrollHeight
@@ -422,7 +605,7 @@ $.get('/allChat/getUserinfo', (data) => {
     allChat.on('info', (msg) => {
       console.log('#info', msg);
       msg = getPayloadFromMsg(msg);
-      $("#listPanel").append(infoBoxCompiled(msg));
+      infoBoxCompiled(msg, 'SystemInfo');
       scrollToBottom();
     })
   } else {
@@ -486,7 +669,6 @@ $('#chooseImage').on('change', () => {
         let content = `<img class="imageContent" src="${imageurl}">`;
         var msg = {
           from: config.userinfo.userid,
-          to: config.socket.room,
           content: content,
         };
         allChat.emit("room_message", msg);
@@ -495,7 +677,7 @@ $('#chooseImage').on('change', () => {
           username: config.userinfo.username,
           avatar: config.userinfo.avatar,
         };
-        $("#listPanel").append(messageBoxCompiled(msg, "right"));
+        messageBoxCompiled(msg, "right");
         var scrollHeight = $("#listPanel")[0].scrollHeight - $("#listPanel")[0].clientHeight;
         $("#listPanel").animate({
           scrollTop: scrollHeight

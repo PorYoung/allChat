@@ -4,17 +4,23 @@ class UserService extends Service {
     let docs = await this.ctx.model.User.findOne({
       _id: userid,
     });
-    return docs.toObject({
-      virtuals: true
-    });
+    if (docs) {
+      return docs.toObject({
+        virtuals: true
+      });
+    }
+    return docs;
   }
   async findOneByUsername(username) {
     let docs = await this.ctx.model.User.findOne({
       username: username,
     });
-    return docs.toObject({
-      virtuals: true
-    });
+    if (docs) {
+      return docs.toObject({
+        virtuals: true
+      });
+    }
+    return docs;
   }
 
   async createUser(userid, username, password) {
@@ -23,16 +29,24 @@ class UserService extends Service {
       config
     } = this;
     let registerDate = new Date().getTime();
-    let defaultAvatar = config.appConfig.defaultAvatar;
-    return ctx.model.User.create({
+    let defaultAvatarArr = config.appConfig.defaultAvatarArr;
+    let defaultAvatar = defaultAvatarArr[Math.floor(Math.random() * defaultAvatarArr.length + 1) - 1];
+    let user = await ctx.model.User.create({
       _id: userid,
       username: username,
       password: password,
       registerDate: registerDate,
       loginDate: registerDate,
       avatar: defaultAvatar,
-      connected: true,
+      connected: 1,
+      ipAddress: ctx.request.ip,
     });
+    if (user) {
+      return user.toObject({
+        virtuals: true
+      });
+    }
+    return user;
   }
 
   async countConnectedInRoom(roomid) {
@@ -48,11 +62,31 @@ class UserService extends Service {
     }, {
       $set: {
         socketid: options.socketid,
-        room: options.room
-      }
+        room: options.room,
+        connected: options.connected,
+        ipAddress: options.ipAddress,
+      },
     }, {
       upsert: true
     });
+  }
+
+  async updateUserIPAddress(options) {
+    let docs = await this.ctx.model.User.findOneAndUpdate({
+      _id: options.userid
+    }, {
+      $set: {
+        ipAddress: options.ipAddress,
+      },
+    }, {
+      new: true
+    });
+    if (docs) {
+      return docs.toObject({
+        virtuals: true
+      });
+    }
+    return docs;
   }
 
   async getConnectionInfoBySocketid(clients) {
@@ -70,7 +104,22 @@ class UserService extends Service {
       onlineUsers.push(doc.toObject({
         virtuals: true
       }));
+    })
+    return onlineUsers;
+  }
+  async getConnectionInfoInRoom(room) {
+    let queryArr = await this.ctx.model.User.find({
+      connected: {
+        $ne: 0
+      },
+      room: room,
     });
+    let onlineUsers = [];
+    queryArr.forEach((doc) => {
+      onlineUsers.push(doc.toObject({
+        virtuals: true
+      }));
+    })
     return onlineUsers;
   }
 }
