@@ -44,8 +44,9 @@ class UserController extends Controller {
     userinfo = await service.user.createUser(userid, username, password);
     if (userinfo) {
       ctx.session.user = userinfo;
+      console.log('session:', ctx.session);
       return ctx.body = '1';
-    }else{
+    } else {
       return ctx.body = '-1';
     }
   }

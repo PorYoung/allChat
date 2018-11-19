@@ -12,11 +12,15 @@ class allChatController extends Controller {
     if (ctx.session.user == null) {
       return ctx.body = '403 forbidden';
     }
+    let {
+      room
+    } = ctx.request.query;
     let userinfo = await service.user.findOneByUserid(ctx.session.user.userid);
     if (userinfo) {
       Object.assign(ctx.session.user, userinfo, {
-        ipAddress: ctx.request.ip
-      })
+        ipAddress: ctx.request.ip,
+        room: room,
+      });
       return ctx.body = Object.assign(userinfo, {
         ipAddress: ctx.request.ip,
       });
@@ -42,17 +46,18 @@ class allChatController extends Controller {
         }]
       }, {
         to: ctx.session.user.userid
-      },{
+      }, {
         from: ctx.session.user.userid
       }]
     }, config.appConfig.messageSplitLimit, page);
+    console.log(ctx.session.user.userid, messageData);
     if (messageData && messageData.length > 0) {
       return ctx.body = messageData;
     } else {
       return ctx.body = '-1';
     }
   }
-  
+
   async formParse(req, filename, config) {
     const form = new formidable.IncomingForm();
     return new Promise((resolve, reject) => {

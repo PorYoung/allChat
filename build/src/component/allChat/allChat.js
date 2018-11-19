@@ -14,7 +14,7 @@ const config = {
   },
 };
 const socketClient = require('socket.io-client');
-const allChat = socketClient('http://127.0.0.1:7001/allChat', {
+const allChat = socketClient('http://10.129.13.253:7001/allChat', {
   query: {
     room: config.socket.room,
   },
@@ -192,7 +192,7 @@ const roomOnlineUserBoxCompiled = (userinfo) => {
 }
 
 //get user info
-$.get('/allChat/getUserinfo', (data) => {
+$.get('/allChat/getUserinfo?room=' + config.socket.room, (data) => {
   if (data && data != -1) {
     Object.assign(config.userinfo, data);
     //get history message
@@ -432,7 +432,7 @@ $.get('/allChat/getUserinfo', (data) => {
             }
           case 'private_message':
             {
-              console.log('private:',msg);
+              console.log('private:', msg);
               messageBoxCompiled(getPayloadFromMsg(msg));
               scrollToBottom();
               break;
