@@ -69,3 +69,11 @@ see [egg docs][egg] and [webpack docs](https://webpack.js.org/concept) for more 
 - the Server default listening port is `7001`
 - the socket client connect to host `127.0.0.1`, you might to modify it if you need to run not at your local computer.
 - waiting for updating...
+
+### Questions & Suggestions
+
+Please open an issue [here](https://github.com/PorYoung/allChat/issues).
+
+### License
+
+[MIT](https://github.com/PorYoung/allChat/blob/master/LICENSE)
