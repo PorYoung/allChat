@@ -50,7 +50,6 @@ class allChatController extends Controller {
         from: ctx.session.user.userid
       }]
     }, config.appConfig.messageSplitLimit, page);
-    console.log(ctx.session.user.userid, messageData);
     if (messageData && messageData.length > 0) {
       return ctx.body = messageData;
     } else {
