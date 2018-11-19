@@ -12,9 +12,10 @@ const config = {
     max: 999,
     id: null,
   },
+  host: 'http://127.0.0.1',
 };
 const socketClient = require('socket.io-client');
-const allChat = socketClient('http://10.129.13.253:7001/allChat', {
+const allChat = socketClient(config.host + '/allChat', {
   query: {
     room: config.socket.room,
   },

@@ -11,31 +11,31 @@ You might need to know [egg.js](https://eggjs.org/) and [webpack](https://webpac
 It's easy to start allChat on your computer. Please notice that my nodejs version is `8.9.0`.
 
 1. Fetch allChat.
-```
-$ git clone https://github.com/PorYoung/allChat.git
-```
+  ```
+  $ git clone https://github.com/PorYoung/allChat.git
+  ```
 2. Go to the project directory and install dependencies.
-```
-$ npm i
-```
+  ```
+  $ npm i
+  ```
 3. You might need use `webpack-cli` to build static files.
-```
-$ npm i webpack-cli -g
-$ npm run build
-```
+  ```
+  $ npm i webpack-cli -g
+  $ npm run build
+  ```
 4. run egg.js project
-```
-$ npm run dev
-```
+  ```
+  $ npm run dev
+  ```
 5. Don't forget the database which I used [mongodb](www.mongodb.org/), install it and start it directly, the connection configuration is in `config/config.default.js`. It's `egg-mongoose` here, which help you use [mongoose](https://mongoosejs.com/) in egg app.
-```javascript
-config.mongoose = {
-  client: {
-    url: 'mongodb://127.0.0.1/chat',
-    options: {},
-  },
-};
-```
+  ```javascript
+  config.mongoose = {
+    client: {
+      url: 'mongodb://127.0.0.1/chat',
+      options: {},
+    },
+  };
+  ```
 
 
 see [egg docs][egg] and [webpack docs](https://webpack.js.org/concept) for more detail.
