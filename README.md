@@ -40,7 +40,7 @@ config.mongoose = {
 
 see [egg docs][egg] and [webpack docs](https://webpack.js.org/concept) for more detail.
 
-### npm scripts
+### Npm Scripts
 
 - Use `npm run lint` to check code style.
 - Use `npm test` to run unit test.
@@ -56,7 +56,7 @@ see [egg docs][egg] and [webpack docs](https://webpack.js.org/concept) for more 
 - `log`: log files.
 - `test`: egg unit test.
 
-### some dependencies
+### Some Dependencies
 
 - `socket.io`: websocket frame, *FEATURING THE FASTEST AND MOST RELIABLE REAL-TIME ENGINE*, [see its website](https://socket.io/).
 - `egg-mongoose`: use mongoose in egg.
@@ -64,7 +64,7 @@ see [egg docs][egg] and [webpack docs](https://webpack.js.org/concept) for more 
 - `bootstrap`, `jquery` and other the third part plugin for web front pages, and `underscroe` can be removed when you replace `_.compile()` with `${}`.
 - etc.
 
-### other tips
+### Other Tips
 
 - the Server default listening port is `7001`
 - the socket client connect to host `127.0.0.1`, you might to modify it if you need to run not at your local computer.
