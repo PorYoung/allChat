@@ -14,6 +14,7 @@ const config = {
   },
   host: 'http://127.0.0.1:7001',
 };
+config.host = window.location.origin;
 const socketClient = require('socket.io-client');
 const allChat = socketClient(config.host.concat('/allChat'), {
   query: {
