@@ -1,4 +1,4 @@
-# allChat
+# allChat1
 
 The project [allChat](https://github.com/PorYoung/allChat) is one of components of project [hifi_wechat](https://github.com/PorYoung/hifi_wechat) which based on nodejs `express` frame, `wechat SDK` and `socket.io`. In this project I rewrite it with [egg.js](https://eggjs.org/), added some new features and optimized. I only spend 3 days to re-construct the project, maybe there are many problems remained. If you find any bugs, wish you can concat me or help me fix it. Thanks!.
 
